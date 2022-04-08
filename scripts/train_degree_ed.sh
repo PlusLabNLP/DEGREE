@@ -5,5 +5,5 @@ DATASET="ace05e"
 # DATASET="ace05ep"
 # DATASET="ere"
 
-python degree/generate_data_GenED.py -c config/config_GenED_${DATASET}.json
-python degree/train_GenED.py -c config/config_GenED_${DATASET}.json
+python degree/generate_data_degree_ed.py -c config/config_degree_ed_${DATASET}.json
+python degree/train_degree_ed.py -c config/config_degree_ed_${DATASET}.json
