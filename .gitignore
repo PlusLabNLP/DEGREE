@@ -1,0 +1,6 @@
+*.ipynb_checkpoints/
+processed_data/*
+cache/*
+output/*
+data/*
+predictions/*
