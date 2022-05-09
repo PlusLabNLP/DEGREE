@@ -135,7 +135,7 @@ If you find that the code is useful in your research, please consider citing our
     @inproceedings{naacl2022degree,
         author    = {I-Hung Hsu and Kuan-Hao Huang and Elizabeth Boschee and Scott Miller and Prem Natarajan and Kai-Wei Chang and Nanyun Peng},
         title     = {DEGREE: A Data-Efficient Generative Event Extraction Model},
-        booktitle = {Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics: Human Language Technologies (NAACL-HLT)},
+        booktitle = {Proceedings of the 2022 Conference of the North American Chapter of the Association for Computational Linguistics (NAACL)},
         year      = {2022},
     }
 
