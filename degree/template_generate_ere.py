@@ -199,7 +199,7 @@ class event_template():
                 try:
                     # we need this ``try'' because we cannot gurantee the model will be bug-free on the matching
                     cor_tri = pred_trigger[pred[2]['cor tri cnt']]
-                    cor_tri_span = self.predstr2span(pred[0])[0]
+                    cor_tri_span = self.predstr2span(cor_tri[0])[0]
                     if cor_tri_span > -1:
                         pred_span = self.predstr2span(pred[0], cor_tri_span)
                     else:
