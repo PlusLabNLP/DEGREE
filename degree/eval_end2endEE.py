@@ -48,7 +48,7 @@ def get_span_idx(pieces, token_start_idxs, span, tokenizer, trigger_span=None):
     """
     words = []
     for s in span.split(' '):
-        words.extend(tokenizer.encode(s, add_special_tokens=True)[1:-1]) # ignore [SOS] and [EOS]
+        words.extend(tokenizer.encode(s, add_special_tokens=False))
     
     candidates = []
     for i in range(len(pieces)):
@@ -87,7 +87,7 @@ def get_span_idx_tri(pieces, token_start_idxs, span, tokenizer, trigger_span=Non
     """
     words = []
     for s in span.split(' '):
-        words.extend(tokenizer.encode(s, add_special_tokens=True)[1:-1]) # ignore [SOS] and [EOS]
+        words.extend(tokenizer.encode(s, add_special_tokens=False))
     
     candidates = []
     for i in range(len(pieces)):
@@ -116,6 +116,8 @@ def get_span_idx_tri(pieces, token_start_idxs, span, tokenizer, trigger_span=Non
             return sorted(candidates, key=lambda x: np.abs(trigger_span[0]-x[0]))
 
 def cal_scores(gold_triggers, pred_triggers, gold_roles, pred_roles):
+    assert len(gold_triggers) == len(pred_triggers)
+    assert len(gold_roles) == len(pred_roles)    
     # tri_id
     gold_tri_id_num, pred_tri_id_num, match_tri_id_num = 0, 0, 0
     for gold_trigger, pred_trigger in zip(gold_triggers, pred_triggers):
@@ -201,8 +203,8 @@ if not args.no_dev:
     for batch in DataLoader(dev_set, batch_size=config.eval_batch_size, shuffle=False, collate_fn=dev_set.collate_fn):
         progress.update(1)
         
-        p_triggers = [[] for _ in range(config.eval_batch_size)]
-        p_roles = [[] for _ in range(config.eval_batch_size)]
+        p_triggers = [[] for _ in range(len(batch.tokens))]
+        p_roles = [[] for _ in range(len(batch.tokens))]
         for event_type in vocab['event_type_itos']:
             theclass = getattr(sys.modules[template_file], event_type.replace(':', '_').replace('-', '_'), False)
             
@@ -215,7 +217,7 @@ if not args.no_dev:
             enc_idxs = inputs['input_ids'].cuda()
             enc_attn = inputs['attention_mask'].cuda()
             
-            outputs = model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=config.max_output_length)
+            outputs = model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=config.beam_size, max_length=config.max_output_length)
             final_outputs = [tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
             
             for bid, (tokens, p_text) in enumerate(zip(batch.tokens, final_outputs)):
@@ -260,12 +262,6 @@ if not args.no_dev:
                 p_roles[bid].extend(roles_)
                 
         p_roles = [list(set(role)) for role in p_roles]
-            
-        if config.ignore_first_header:
-            for bid, wnd_id in enumerate(batch.wnd_ids):
-                if int(wnd_id.split('-')[-1]) < 4:
-                    p_triggers[bid] = []
-                    p_roles[bid] = []
         
         dev_gold_triggers.extend(batch.triggers)
         dev_gold_roles.extend(batch.roles)
@@ -300,9 +296,9 @@ test_gold_triggers, test_gold_roles, test_pred_triggers, test_pred_roles = [], [
 write_object = []
 for batch in DataLoader(test_set, batch_size=config.eval_batch_size, shuffle=False, collate_fn=test_set.collate_fn):
     progress.update(1)
-    p_triggers = [[] for _ in range(config.eval_batch_size)]
-    p_roles = [[] for _ in range(config.eval_batch_size)]
-    p_texts = [[] for _ in range(config.eval_batch_size)]
+    p_triggers = [[] for _ in range(len(batch.tokens))]
+    p_roles = [[] for _ in range(len(batch.tokens))]
+    p_texts = [[] for _ in range(len(batch.tokens))]
     for event_type in vocab['event_type_itos']:
         theclass = getattr(sys.modules[template_file], event_type.replace(':', '_').replace('-', '_'), False)
         
@@ -315,7 +311,7 @@ for batch in DataLoader(test_set, batch_size=config.eval_batch_size, shuffle=Fal
         enc_idxs = inputs['input_ids'].cuda()
         enc_attn = inputs['attention_mask'].cuda()
         
-        outputs = model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=config.max_output_length)
+        outputs = model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=config.beam_size, max_length=config.max_output_length)
         final_outputs = [tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
         
         for bid, (tokens, p_text) in enumerate(zip(batch.tokens, final_outputs)):
@@ -383,22 +379,22 @@ for batch in DataLoader(test_set, batch_size=config.eval_batch_size, shuffle=Fal
 progress.close()
     
 # calculate scores
-dev_scores = cal_scores(test_gold_triggers, test_pred_triggers, test_gold_roles, test_pred_roles)
+test_scores = cal_scores(test_gold_triggers, test_pred_triggers, test_gold_roles, test_pred_roles)
 
 print("---------------------------------------------------------------------")
 print('Trigger I  - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['tri_id'][3] * 100.0, dev_scores['tri_id'][2], dev_scores['tri_id'][1], 
-    dev_scores['tri_id'][4] * 100.0, dev_scores['tri_id'][2], dev_scores['tri_id'][0], dev_scores['tri_id'][5] * 100.0))
+    test_scores['tri_id'][3] * 100.0, test_scores['tri_id'][2], test_scores['tri_id'][1], 
+    test_scores['tri_id'][4] * 100.0, test_scores['tri_id'][2], test_scores['tri_id'][0], test_scores['tri_id'][5] * 100.0))
 print('Trigger C  - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['tri_cls'][3] * 100.0, dev_scores['tri_cls'][2], dev_scores['tri_cls'][1], 
-    dev_scores['tri_cls'][4] * 100.0, dev_scores['tri_cls'][2], dev_scores['tri_cls'][0], dev_scores['tri_cls'][5] * 100.0))
+    test_scores['tri_cls'][3] * 100.0, test_scores['tri_cls'][2], test_scores['tri_cls'][1], 
+    test_scores['tri_cls'][4] * 100.0, test_scores['tri_cls'][2], test_scores['tri_cls'][0], test_scores['tri_cls'][5] * 100.0))
 print("---------------------------------------------------------------------")
 print('Role I     - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['arg_id'][3] * 100.0, dev_scores['arg_id'][2], dev_scores['arg_id'][1], 
-    dev_scores['arg_id'][4] * 100.0, dev_scores['arg_id'][2], dev_scores['arg_id'][0], dev_scores['arg_id'][5] * 100.0))
+    test_scores['arg_id'][3] * 100.0, test_scores['arg_id'][2], test_scores['arg_id'][1], 
+    test_scores['arg_id'][4] * 100.0, test_scores['arg_id'][2], test_scores['arg_id'][0], test_scores['arg_id'][5] * 100.0))
 print('Role C     - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['arg_cls'][3] * 100.0, dev_scores['arg_cls'][2], dev_scores['arg_cls'][1], 
-    dev_scores['arg_cls'][4] * 100.0, dev_scores['arg_cls'][2], dev_scores['arg_cls'][0], dev_scores['arg_cls'][5] * 100.0))
+    test_scores['arg_cls'][3] * 100.0, test_scores['arg_cls'][2], test_scores['arg_cls'][1], 
+    test_scores['arg_cls'][4] * 100.0, test_scores['arg_cls'][2], test_scores['arg_cls'][0], test_scores['arg_cls'][5] * 100.0))
 print("---------------------------------------------------------------------")
 
 if args.write_file:

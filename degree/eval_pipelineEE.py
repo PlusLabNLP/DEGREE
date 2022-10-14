@@ -51,7 +51,7 @@ def get_span_idx(pieces, token_start_idxs, span, tokenizer, trigger_span=None):
     """
     words = []
     for s in span.split(' '):
-        words.extend(tokenizer.encode(s, add_special_tokens=True)[1:-1]) # ignore [SOS] and [EOS]
+        words.extend(tokenizer.encode(s, add_special_tokens=False))
     
     candidates = []
     for i in range(len(pieces)):
@@ -90,7 +90,7 @@ def get_span_idx_tri(pieces, token_start_idxs, span, tokenizer, trigger_span=Non
     """
     words = []
     for s in span.split(' '):
-        words.extend(tokenizer.encode(s, add_special_tokens=True)[1:-1]) # ignore [SOS] and [EOS]
+        words.extend(tokenizer.encode(s, add_special_tokens=False))
     
     candidates = []
     for i in range(len(pieces)):
@@ -119,6 +119,8 @@ def get_span_idx_tri(pieces, token_start_idxs, span, tokenizer, trigger_span=Non
             return sorted(candidates, key=lambda x: np.abs(trigger_span[0]-x[0]))
 
 def cal_scores(gold_triggers, pred_triggers, gold_roles, pred_roles):
+    assert len(gold_triggers) == len(pred_triggers)
+    assert len(gold_roles) == len(pred_roles)  
     # tri_id
     gold_tri_id_num, pred_tri_id_num, match_tri_id_num = 0, 0, 0
     for gold_trigger, pred_trigger in zip(gold_triggers, pred_triggers):
@@ -227,7 +229,7 @@ if not args.no_dev:
         if args.gold_trigger:
             p_triggers = batch.triggers
         else:
-            p_triggers = [[] for _ in range(eae_config.eval_batch_size)]
+            p_triggers = [[] for _ in range(len(batch.tokens))]
             for event_type in vocab['event_type_itos']:
                 theclass = getattr(sys.modules[template_file], event_type.replace(':', '_').replace('-', '_'), False)
                 
@@ -240,7 +242,7 @@ if not args.no_dev:
                 enc_idxs = inputs['input_ids'].cuda()
                 enc_attn = inputs['attention_mask'].cuda()
                 
-                outputs = ed_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=ed_config.max_output_length)
+                outputs = ed_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=ed_config.beam_size, max_length=ed_config.max_output_length)
                 final_outputs = [ed_tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
                 
                 for bid, (tokens, p_text) in enumerate(zip(batch.tokens, final_outputs)):
@@ -251,21 +253,21 @@ if not args.no_dev:
                     triggers_ = list(set(triggers_))
                     p_triggers[bid].extend(triggers_)
                 
-            if ed_config.ignore_first_header:
-                for bid, wnd_id in enumerate(batch.wnd_ids):
-                    if int(wnd_id.split('-')[-1]) < 4:
-                        p_triggers[bid] = []
+            # if ed_config.ignore_first_header:
+            #     for bid, wnd_id in enumerate(batch.wnd_ids):
+            #         if int(wnd_id.split('-')[-1]) < 4:
+            #             p_triggers[bid] = []
         
         # argument predictions
-        p_roles = [[] for _ in range(eae_config.eval_batch_size)]
+        p_roles = [[] for _ in range(len(batch.tokens))]
         event_templates = []
-        for tokens, triggers in zip(batch.tokens, p_triggers):
-            event_templates.append(eve_template_generator(tokens, triggers, [], eae_config.input_style, eae_config.output_style, vocab, False))
-            
+        for bid, (tokens, triggers) in enumerate(zip(batch.tokens, p_triggers)):
+            event_templates.append((bid, 
+                eve_template_generator(tokens, triggers, [], eae_config.input_style, eae_config.output_style, vocab, False)))   
         inputs = []
         events = []
         bids = []
-        for i, event_temp in enumerate(event_templates):
+        for i, event_temp in event_templates:
             for data in event_temp.get_training_data():
                 inputs.append(data[0])
                 events.append(data[2])
@@ -276,7 +278,7 @@ if not args.no_dev:
             enc_idxs = inputs['input_ids'].cuda()
             enc_attn = inputs['attention_mask'].cuda()
 
-            outputs = eae_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=eae_config.max_output_length)
+            outputs = eae_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=eae_config.beam_size, max_length=eae_config.max_output_length)
             final_outputs = [eae_tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
 
             for p_text, info, bid in zip(final_outputs, events, bids):
@@ -328,13 +330,13 @@ write_object = []
 for batch in DataLoader(test_set, batch_size=eae_config.eval_batch_size, shuffle=False, collate_fn=test_set.collate_fn):
     progress.update(1)
     
-    p_tri_texts = [[] for _ in range(eae_config.eval_batch_size)]
-    p_arg_texts = [[] for _ in range(eae_config.eval_batch_size)]
+    p_tri_texts = [[] for _ in range(len(batch.tokens))]
+    p_arg_texts = [[] for _ in range(len(batch.tokens))]
     # trigger predictions
     if args.gold_trigger:
         p_triggers = batch.triggers
     else:
-        p_triggers = [[] for _ in range(eae_config.eval_batch_size)]
+        p_triggers = [[] for _ in range(len(batch.tokens))]
         for event_type in vocab['event_type_itos']:
             theclass = getattr(sys.modules[template_file], event_type.replace(':', '_').replace('-', '_'), False)
             
@@ -347,13 +349,13 @@ for batch in DataLoader(test_set, batch_size=eae_config.eval_batch_size, shuffle
             enc_idxs = inputs['input_ids'].cuda()
             enc_attn = inputs['attention_mask'].cuda()
             
-            outputs = ed_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=ed_config.max_output_length)
+            outputs = ed_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=ed_config.beam_size, max_length=ed_config.max_output_length)
             final_outputs = [ed_tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
             
             for bid, (tokens, p_text) in enumerate(zip(batch.tokens, final_outputs)):
                 template = theclass(ed_config.input_style, ed_config.output_style, tokens, event_type)
                 pred_object = template.decode(p_text)
-                triggers_ = [get_span_idx(batch.piece_idxs[bid], batch.token_start_idxs[bid], span, ed_tokenizer)+(event_type, ) for span, _, _ in pred_object]
+                triggers_ = [mention+(event_type, ) for span, _, _ in pred_object for mention in get_span_idx_tri(batch.piece_idxs[bid], batch.token_start_idxs[bid], span, ed_tokenizer)]
                 triggers_ = [t for t in triggers_ if t[0] != -1]
                 triggers_ = list(set(triggers_))
                 p_triggers[bid].extend(triggers_)
@@ -365,15 +367,16 @@ for batch in DataLoader(test_set, batch_size=eae_config.eval_batch_size, shuffle
                     p_triggers[bid] = []
     
     # argument predictions
-    p_roles = [[] for _ in range(eae_config.eval_batch_size)]
+    p_roles = [[] for _ in range(len(batch.tokens))]
     event_templates = []
-    for tokens, triggers in zip(batch.tokens, p_triggers):
-        event_templates.append(eve_template_generator(tokens, triggers, [], eae_config.input_style, eae_config.output_style, vocab, False))
+    for bid, (tokens, triggers) in enumerate(zip(batch.tokens, p_triggers)):
+        event_templates.append((bid,
+        eve_template_generator(tokens, triggers, [], eae_config.input_style, eae_config.output_style, vocab, False)))
         
     inputs = []
     events = []
     bids = []
-    for i, event_temp in enumerate(event_templates):
+    for i, event_temp in event_templates:
         for data in event_temp.get_training_data():
             inputs.append(data[0])
             events.append(data[2])
@@ -384,7 +387,7 @@ for batch in DataLoader(test_set, batch_size=eae_config.eval_batch_size, shuffle
         enc_idxs = inputs['input_ids'].cuda()
         enc_attn = inputs['attention_mask'].cuda()
 
-        outputs = eae_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=4, max_length=eae_config.max_output_length)
+        outputs = eae_model.model.generate(input_ids=enc_idxs, attention_mask=enc_attn, num_beams=eae_config.beam_size, max_length=eae_config.max_output_length)
         final_outputs = [eae_tokenizer.decode(output, skip_special_tokens=True, clean_up_tokenization_spaces=True) for output in outputs]
 
         for p_text, info, bid in zip(final_outputs, events, bids):
@@ -418,24 +421,24 @@ for batch in DataLoader(test_set, batch_size=eae_config.eval_batch_size, shuffle
         })
             
 progress.close()
-    
+
 # calculate scores
-dev_scores = cal_scores(test_gold_triggers, test_pred_triggers, test_gold_roles, test_pred_roles)
+test_scores = cal_scores(test_gold_triggers, test_pred_triggers, test_gold_roles, test_pred_roles)
 
 print("---------------------------------------------------------------------")
 print('Trigger I  - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['tri_id'][3] * 100.0, dev_scores['tri_id'][2], dev_scores['tri_id'][1], 
-    dev_scores['tri_id'][4] * 100.0, dev_scores['tri_id'][2], dev_scores['tri_id'][0], dev_scores['tri_id'][5] * 100.0))
+    test_scores['tri_id'][3] * 100.0, test_scores['tri_id'][2], test_scores['tri_id'][1], 
+    test_scores['tri_id'][4] * 100.0, test_scores['tri_id'][2], test_scores['tri_id'][0], test_scores['tri_id'][5] * 100.0))
 print('Trigger C  - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['tri_cls'][3] * 100.0, dev_scores['tri_cls'][2], dev_scores['tri_cls'][1], 
-    dev_scores['tri_cls'][4] * 100.0, dev_scores['tri_cls'][2], dev_scores['tri_cls'][0], dev_scores['tri_cls'][5] * 100.0))
+    test_scores['tri_cls'][3] * 100.0, test_scores['tri_cls'][2], test_scores['tri_cls'][1], 
+    test_scores['tri_cls'][4] * 100.0, test_scores['tri_cls'][2], test_scores['tri_cls'][0], test_scores['tri_cls'][5] * 100.0))
 print("---------------------------------------------------------------------")
 print('Role I     - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['arg_id'][3] * 100.0, dev_scores['arg_id'][2], dev_scores['arg_id'][1], 
-    dev_scores['arg_id'][4] * 100.0, dev_scores['arg_id'][2], dev_scores['arg_id'][0], dev_scores['arg_id'][5] * 100.0))
+    test_scores['arg_id'][3] * 100.0, test_scores['arg_id'][2], test_scores['arg_id'][1], 
+    test_scores['arg_id'][4] * 100.0, test_scores['arg_id'][2], test_scores['arg_id'][0], test_scores['arg_id'][5] * 100.0))
 print('Role C     - P: {:6.2f} ({:4d}/{:4d}), R: {:6.2f} ({:4d}/{:4d}), F: {:6.2f}'.format(
-    dev_scores['arg_cls'][3] * 100.0, dev_scores['arg_cls'][2], dev_scores['arg_cls'][1], 
-    dev_scores['arg_cls'][4] * 100.0, dev_scores['arg_cls'][2], dev_scores['arg_cls'][0], dev_scores['arg_cls'][5] * 100.0))
+    test_scores['arg_cls'][3] * 100.0, test_scores['arg_cls'][2], test_scores['arg_cls'][1], 
+    test_scores['arg_cls'][4] * 100.0, test_scores['arg_cls'][2], test_scores['arg_cls'][0], test_scores['arg_cls'][5] * 100.0))
 print("---------------------------------------------------------------------")
 
 if args.write_file:

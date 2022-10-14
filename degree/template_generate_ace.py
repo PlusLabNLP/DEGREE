@@ -2748,7 +2748,7 @@ class Justice_Charge_Indict(event_template):
                 if i_style == 'event_type':
                     input_str += ' \n {}'.format('justice event, charge indict sub-type')
                 if i_style == 'event_type_sent':
-                    input_str += ' \n {}'.format("The event is related to someone or some organziation being accused of a crime.")
+                    input_str += ' \n {}'.format("The event is related to someone or some organization being accused of a crime.")
                 if i_style == 'keywords':
                     input_str += ' \n Similar triggers such as {}'.format(', '.join(self.get_keywords()))
                 if i_style == 'triggers':
