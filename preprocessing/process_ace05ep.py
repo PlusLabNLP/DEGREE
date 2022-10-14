@@ -24,12 +24,12 @@ from transformers import (BertTokenizer,
                           AutoTokenizer)
 from nltk import (sent_tokenize as sent_tokenize_,
                   wordpunct_tokenize as wordpunct_tokenize_)
-import jieba                  
+#import jieba                  
 import stanza
 
-nlp_ar = stanza.Pipeline(lang='ar', processors='tokenize')
+#nlp_ar = stanza.Pipeline(lang='ar', processors='tokenize')
 nlp_en = stanza.Pipeline(lang='en', processors='tokenize')
-nlp_zh = stanza.Pipeline(lang='zh', processors='tokenize')
+#nlp_zh = stanza.Pipeline(lang='zh', processors='tokenize')
 
 TAG_PATTERN = re.compile('<[^<>]+>', re.MULTILINE)
 

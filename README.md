@@ -5,7 +5,8 @@ Code for our NAACL-2022 paper [DEGREE: A Data-Efficient Generation-Based Event E
 ## Environment
 - Python==3.8
 - PyTorch==1.8.0
-- transformers==3.1.0
+- transformers==3.1.0 
+- protobuf==3.17.3
 - tensorboardx==2.4
 - lxml==4.6.3
 - beautifulsoup4==4.9.3
@@ -13,6 +14,13 @@ Code for our NAACL-2022 paper [DEGREE: A Data-Efficient Generation-Based Event E
 - stanza==1.2
 - sentencepiece==0.1.95
 - ipdb==0.13.9
+
+```
+Note: if you meet issues reated to rust when installing transformers through pip, this
+[website](https://programmerah.com/solved-transformers-install-error-error-cant-find-rust-compiler-50679/) might be helpful
+```
+
+Or you can reference the `env_reference.yml` for clearer installation
 
 ## Datasets
 

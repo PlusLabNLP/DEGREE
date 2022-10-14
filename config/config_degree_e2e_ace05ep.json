@@ -15,7 +15,7 @@
     "model_name": "facebook/bart-large",
     "input_style": ["event_type_sent", "keywords", "template"],   
     "output_style": ["trigger:sentence", "argument:sentence"], 
-	"n_negative": 15, 
+    "n_negative": 15, 
     "max_epoch": 45,
     "warmup_epoch": 5,
     "train_batch_size": 32,
