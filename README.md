@@ -27,6 +27,8 @@ Note:
 We support `ace05e`, `ace05ep`, and `ere`. 
 
 ### Preprocessing
+Our preprocessing mainly adapts [OneIE's](https://blender.cs.illinois.edu/software/oneie/) released scripts with minor modifications. We deeply thank the contribution from the authors of the paper.
+
 #### `ace05e`
 1. Prepare data processed from [DyGIE++](https://github.com/dwadden/dygiepp#ace05-event)
 2. Put the processed data into the folder `processed_data/ace05e_dygieppformat`
