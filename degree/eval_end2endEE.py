@@ -157,10 +157,10 @@ def cal_scores(gold_triggers, pred_triggers, gold_roles, pred_roles):
         match_arg_cls_num += len(gold_set & pred_set)
     
     scores = {
-        'tri_id': (gold_tri_id_num, pred_tri_id_num, match_tri_id_num) + compute_f1(gold_tri_id_num, pred_tri_id_num, match_tri_id_num),
-        'tri_cls': (gold_tri_cls_num, pred_tri_cls_num, match_tri_cls_num) + compute_f1(gold_tri_cls_num, pred_tri_cls_num, match_tri_cls_num),
-        'arg_id': (gold_arg_id_num, pred_arg_id_num, match_arg_id_num) + compute_f1(gold_arg_id_num, pred_arg_id_num, match_arg_id_num),
-        'arg_cls': (gold_arg_cls_num, pred_arg_cls_num, match_arg_cls_num) + compute_f1(gold_arg_cls_num, pred_arg_cls_num, match_arg_cls_num),
+        'tri_id': (gold_tri_id_num, pred_tri_id_num, match_tri_id_num) + compute_f1(pred_tri_id_num, gold_tri_id_num, match_tri_id_num),
+        'tri_cls': (gold_tri_cls_num, pred_tri_cls_num, match_tri_cls_num) + compute_f1(pred_tri_cls_num, gold_tri_cls_num, match_tri_cls_num),
+        'arg_id': (gold_arg_id_num, pred_arg_id_num, match_arg_id_num) + compute_f1(pred_arg_id_num, gold_arg_id_num, match_arg_id_num),
+        'arg_cls': (gold_arg_cls_num, pred_arg_cls_num, match_arg_cls_num) + compute_f1(pred_arg_cls_num, gold_arg_cls_num, match_arg_cls_num),
     }
     
     return scores
