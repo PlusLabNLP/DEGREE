@@ -133,9 +133,9 @@ python degree/eval_pipelineEE.py -ceae config/config_degree_eae_ace05e.json -eae
 
 | Dataset        | Model        | Model          | Model        |
 | :------------- | :----------- | :------------- | :----------- |
-| ace05e         | [DEGREE (EAE)](https://drive.google.com/file/d/1M6MMCGOE6sZeTXlmhwYts3iWhFuZk8TT/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1Q0M_lf4jrQNiF6v-P1BxfMoBsU4GG7OW/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/13iNZBVU2bGecQBkSIuNmR6Ob7fKEM1e9/view?usp=sharing) |
-| ace05ep        | [DEGREE (EAE)](https://drive.google.com/file/d/1GbeHVvgX3x4FRMJjgvLExPWXWp-WM75C/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1MZkeli2J12ThDatA-c_5CFXbf5IDr8nr/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/1lWD8oOscw8l-HLiy2WYpM3QicKmND3KM/view?usp=sharing) |
-| ere            | [DEGREE (EAE)](https://drive.google.com/file/d/1MFYIlFdIStSGl4mmYyRzhuLWBkkQyn4V/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1HZCBYJpR2glMqCukxj4blHLkr8RRNKKE/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/16Mv-C2ZpQS6K3IqbgYMFxAibtOLD9x-t/view?usp=sharing) |
+| ace05e         | [DEGREE (EAE)](https://drive.google.com/file/d/1KYI0zxtzoscTUqLJE79aAocORDg8Xuyv/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1EEQRo2nWjop28GDTgNT8wng8yp4K_h4v/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/1HxFIgWAgiQ1ZUHhea76oIwTXVn2rGove/view?usp=sharing) |
+| ace05ep        | [DEGREE (EAE)](https://drive.google.com/file/d/1RP-iFa0wpXlPM2_3N0x60CvGrJFBoVng/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1x0Noa4ECwXBnpAKMaySGClE-UgWqPbb6/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/16ovrzc4YbblA2vFtrzG6O6T10uk5VBwW/view?usp=sharing) |
+| ere            | [DEGREE (EAE)](https://drive.google.com/file/d/1AyiEp-0zt2Nb3wgmlovsV7wao-5P6AAb/view?usp=sharing) | [DEGREE (ED)](https://drive.google.com/file/d/1vNHeyt5Zqlj_M9b5hL2KuEGwQVg2mml3/view?usp=sharing) | [DEGREE (E2E)](https://drive.google.com/file/d/1i7Qw-qIxcC9pdzz7_H5O2LdIl0Oxo-Ob/view?usp=sharing) |
 
 
 ## Citation
